@@ -1,8 +1,7 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.6.6;
+pragma solidity ^0.8.1;
 //https://docs.uniswap.org/protocol/V2/reference/smart-contracts/router-01#factory
 import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
-import '@uniswap/v2-periphery/contracts/libraries/UniswapV2Library.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
 
@@ -47,12 +46,13 @@ contract Adapter{
         address pair =  IUniswapV2Factory(factory).createPair(tokenA_, tokenB_);
         pairToken[pair] = PairToken({tokenA: tokenA_, tokenB: tokenB_});
     }
-    
+
     function addLiquidity(address pairTokens, uint amountADesired_, uint amountBDesired_, address to_ ) public {
         require(to_ != address(0), "Adapter: Address 'to' don't be equal null");
         require(pairTokens != address(0), "Adapter: Address 'pairTokens' don't be equal null");
         require(amountADesired_ > 0 || amountBDesired_ > 0, "Adapter: amountADesired_ need be more");
-        require(liquidity[pairTokens].status != ACTIVE, "Adapter: Liquidity already created");
+        require(liquidity[pairTokens].status != Status.ACTIVE, "Adapter: Liquidity already created");
+        require(liquidity[pairTokens].status != Status.INACTIVE, "Adapter: Liquidity is inactive");
         (uint amountA_, uint amountB_, uint liquidity_) = router.addLiquidity(
         pairToken[pairTokens].tokenA,
         pairToken[pairTokens].tokenB,
@@ -69,7 +69,7 @@ contract Adapter{
     function deleteLiquidity(address pairTokens, address to_) public {
         require(to_ != address(0), "Adapter: Address 'to' don't be equal null");
         require(pairTokens != address(0), "Adapter: Address 'pairTokens' don't be equal null");
-        require(liquidity[pairTokens].status == ACTIVE, "Adapter: Liquidity is inactive");
+        require(liquidity[pairTokens].status == Status.ACTIVE, "Adapter: Liquidity is inactive");
         (uint amountA_, uint amountB_) =  router.removeLiquidity(
         pairToken[pairTokens].tokenA,
         pairToken[pairTokens].tokenB,
